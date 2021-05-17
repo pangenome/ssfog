@@ -8,6 +8,5 @@ edition = "2018"
 
 [dependencies]
 clap = "2.33.0"
-rstat = "0.6.0"
 compute = "0.1.27"
 flate2 = "1.0.20"
