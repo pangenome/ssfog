@@ -3,7 +3,7 @@ use std::fs::File;
 use std::io;
 use std::io::{prelude::*, BufReader};
 use compute::signal::*;
-use compute::distributions::Normal;
+//use compute::distributions::Normal;
 use std::f64::consts::{E , PI};
 // // use num::pow::pow;
 // // use crate::num::traits::Pow;
@@ -63,6 +63,7 @@ fn main() {
             Arg::with_name("sigma")
                 .short("s")
                 .long("sigma")
+                .takes_value(true)
                 .help("sigma for our gaussian"),
         )
         .get_matches();
@@ -72,18 +73,16 @@ fn main() {
         .unwrap_or(&"1")
         .parse::<usize>()
         .unwrap();    // let dist  = Normal::new(0.0, 100.0);
-    let impulse_len = 3*sigma;
+    let impulse_len = 2*sigma;
     let mu = impulse_len/2;
     let impulse = (0..impulse_len).map(|x| normal_pdf(mu as f64, sigma as f64, x as f64)).collect::<Vec<f64>>();
     // println!("{}", impulse.iter().map(|x| format!("{}", x)).collect::<Vec<String>>().join(" "));
 
     let filename = matches.value_of("INPUT").unwrap();
     for_each_input_vector(filename, |name, v| {
-        // println!("{} {}", name, v.iter().sum::<f32>() / (v.len() as f32))
 
         let res = convolve(&v, &impulse, 0.5);
-        println!("{}", res.iter().map(|x| format!("{}", x)).collect::<Vec<String>>().join(" "))
-
+        res.iter().enumerate().for_each(|(i, x)| println!("{}\t{}\t{}\t{}", name, sigma, i, x));
 
     });
 }
