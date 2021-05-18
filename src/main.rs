@@ -116,11 +116,11 @@ fn main() {
         } else {
             let mut q = convolve(&v, &impulse, 1.0);
             for _i in 0..nth_derivative {
-                q = differentiate(&q);
+                q = convolve(&differentiate(&q), &impulse, 1.0);
             }
             q
         };
         //let res = &_res[impulse_len-1.._res.len()-impulse_len];
-        res.iter().enumerate().for_each(|(i, x)| println!("{}\t{}\t{}\t{}", name, sigma, (i as i64 - (impulse_len/2) as i64), x));
+        res.iter().enumerate().for_each(|(i, x)| println!("{}\t{}\t{}\t{}", name, sigma, (i as i64 - ((impulse_len/2)*(nth_derivative+1)) as i64), x));
     });
 }
