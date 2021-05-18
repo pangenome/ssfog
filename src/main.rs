@@ -55,6 +55,13 @@ fn differentiate(v: &[f64]) -> Vec<f64> {
     }).collect::<Vec<f64>>()
 }
 
+fn smooth_differentiate(v: &[f64], l: usize) -> Vec<f64> {
+    let mut p = &v[0];
+    (l..v.len()-l).map(|i| -> f64 {
+        (v[i..i+l].iter().sum::<f64>() / l as f64) - (v[i-l..i].iter().sum::<f64>() / l as f64)
+    }).collect::<Vec<f64>>()
+}
+
 fn main() {
     let matches = App::new("ssfog")
         .version("0.1.0")
@@ -92,6 +99,7 @@ fn main() {
         .unwrap_or(&"0")
         .parse::<usize>()
         .unwrap();
+
     let impulse_len = 8*sigma;
     let mu = impulse_len/2;
     let raw_impulse = (0..impulse_len).map(|x| normal_pdf(mu as f64, sigma as f64, x as f64)).collect::<Vec<f64>>();
