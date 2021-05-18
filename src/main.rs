@@ -73,7 +73,7 @@ fn main() {
         .unwrap_or(&"1")
         .parse::<usize>()
         .unwrap();    // let dist  = Normal::new(0.0, 100.0);
-    let impulse_len = 2*sigma;
+    let impulse_len = 6*sigma;
     let mu = impulse_len/2;
     let raw_impulse = (0..impulse_len).map(|x| normal_pdf(mu as f64, sigma as f64, x as f64)).collect::<Vec<f64>>();
     let impulse_weight: f64 = raw_impulse.iter().sum();
