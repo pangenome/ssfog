@@ -98,6 +98,12 @@ fn main() {
                 .long("raw-signal")
                 .help("write the input signal without processing"),
         )
+        .arg(
+            Arg::with_name("zero-cross")
+                .short("z")
+                .long("zero-cross")
+                .help("Combined to -d 2 retrive the zero-crossing position for specific sigma"),
+        )
         .get_matches();
 
     let sigma = matches
@@ -111,6 +117,7 @@ fn main() {
         .parse::<usize>()
         .unwrap();
     let raw_signal = matches.is_present("raw-signal");
+    let zero_cross = matches.is_present("zero-cross");
 
     let impulse_len = 8 * sigma;
     let mu = impulse_len / 2;
@@ -138,14 +145,33 @@ fn main() {
             }
             q
         };
-        //let res = &_res[impulse_len-1.._res.len()-impulse_len];
-        let adj = if raw_signal {
-            0
+        if zero_cross {
+            if nth_derivative == 2 {
+                let mut count = 0;
+                for (i, x) in res.iter().enumerate() {
+                    let previous_value = if count == 0 { res[i]
+                    } else { res[i-1] };
+                    let  current_value = res[i];
+                    let zero = 0.0 as f64;
+                    if previous_value > zero && current_value < zero {
+                        println!("{}\t{}\t-1\t{}", i, x, &sigma )
+                    } else if previous_value < zero && current_value > zero {
+                        println!("{}\t{}\t+1\t{}", i, x, &sigma )
+                    }
+                    count += 1 ;
+                    }
+                }
         } else {
-            ((impulse_len / 2) * (nth_derivative + 1)) as i64
+        //let res = &_res[impulse_len-1.._res.len()-impulse_len];
+            let adj = if raw_signal {
+                0
+            } else {
+                ((impulse_len / 2) * (nth_derivative + 1)) as i64
+            };
+            res.iter()
+                .enumerate()
+                .for_each(|(i, x)| println!("{}\t{}\t{}\t{}", name, sigma, (i as i64 - adj), x));
         };
-        res.iter()
-            .enumerate()
-            .for_each(|(i, x)| println!("{}\t{}\t{}\t{}", name, sigma, (i as i64 - adj), x));
+
     });
 }
