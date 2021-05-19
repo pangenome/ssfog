@@ -47,14 +47,10 @@ fn normal_pmf(mu: f64, sigma: f64, x: f64) -> f64 {
 }
 
 fn differentiate(v: &[f64]) -> Vec<f64> {
-    let mut p = &v[0];
-    v[1..]
+    v[..v.len() - 1]
         .iter()
-        .map(|c| {
-            let d = c - p;
-            p = c;
-            d
-        })
+        .enumerate()
+        .map(|(i, c)| v[i + 1] - c)
         .collect::<Vec<f64>>()
 }
 
@@ -65,9 +61,7 @@ fn zero_crossings(v: &[f64]) -> Vec<(usize, f64)> {
         .iter()
         .enumerate()
         .filter_map(|(i, c)| {
-            let d = if p < zero && c > zero {
-                Some((i, c - p))
-            } else if p > zero && c < zero {
+            let d = if p < zero && c > zero || p > zero && c < zero {
                 Some((i, c - p))
             } else {
                 None
@@ -77,15 +71,6 @@ fn zero_crossings(v: &[f64]) -> Vec<(usize, f64)> {
         })
         .collect::<Vec<(usize, f64)>>()
 }
-
-
-/*
-fn smooth_differentiate(v: &[f64], l: usize) -> Vec<f64> {
-    (l..v.len()-l).map(|i| -> f64 {
-        (v[i..i+l].iter().sum::<f64>() / l as f64) - (v[i-l..i].iter().sum::<f64>() / l as f64)
-    }).collect::<Vec<f64>>()
-}
-*/
 
 fn main() {
     let matches = App::new("ssfog")
@@ -176,11 +161,10 @@ fn main() {
                 println!("{}\t{}\t{}", (*i as i64 - adj), m, &sigma);
             });
         } else {
-        //let res = &_res[impulse_len-1.._res.len()-impulse_len];
+            //let res = &_res[impulse_len-1.._res.len()-impulse_len];
             res.iter()
                 .enumerate()
                 .for_each(|(i, x)| println!("{}\t{}\t{}\t{}", name, sigma, (i as i64 - adj), x));
         };
-
     });
 }
