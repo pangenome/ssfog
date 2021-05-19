@@ -58,6 +58,27 @@ fn differentiate(v: &[f64]) -> Vec<f64> {
         .collect::<Vec<f64>>()
 }
 
+fn zero_crossings(v: &[f64]) -> Vec<(usize, f64)> {
+    let mut p = &v[0];
+    let zero = &0f64;
+    v[1..]
+        .iter()
+        .enumerate()
+        .filter_map(|(i, c)| {
+            let d = if p < zero && c > zero {
+                Some((i, c - p))
+            } else if p > zero && c < zero {
+                Some((i, c - p))
+            } else {
+                None
+            };
+            p = c;
+            d
+        })
+        .collect::<Vec<(usize, f64)>>()
+}
+
+
 /*
 fn smooth_differentiate(v: &[f64], l: usize) -> Vec<f64> {
     (l..v.len()-l).map(|i| -> f64 {
@@ -141,33 +162,21 @@ fn main() {
         } else {
             let mut q = convolve(&v, &impulse, 1.0);
             for _i in 0..nth_derivative {
-                q = differentiate(&q);
+                q = convolve(&differentiate(&q), &impulse, 1.0);
             }
             q
         };
+        let adj = if raw_signal {
+            0
+        } else {
+            ((impulse_len / 2) * (nth_derivative + 1)) as i64
+        };
         if zero_cross {
-            if nth_derivative == 2 {
-                let mut count = 0;
-                for (i, x) in res.iter().enumerate() {
-                    let previous_value = if count == 0 { res[i]
-                    } else { res[i-1] };
-                    let  current_value = res[i];
-                    let zero = 0.0 as f64;
-                    if previous_value > zero && current_value < zero {
-                        println!("{}\t{}\t-1\t{}", i, x, &sigma )
-                    } else if previous_value < zero && current_value > zero {
-                        println!("{}\t{}\t+1\t{}", i, x, &sigma )
-                    }
-                    count += 1 ;
-                    }
-                }
+            zero_crossings(&res).iter().for_each(|(i, m)| {
+                println!("{}\t{}\t{}", (*i as i64 - adj), m, &sigma);
+            });
         } else {
         //let res = &_res[impulse_len-1.._res.len()-impulse_len];
-            let adj = if raw_signal {
-                0
-            } else {
-                ((impulse_len / 2) * (nth_derivative + 1)) as i64
-            };
             res.iter()
                 .enumerate()
                 .for_each(|(i, x)| println!("{}\t{}\t{}\t{}", name, sigma, (i as i64 - adj), x));
