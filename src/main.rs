@@ -193,6 +193,8 @@ fn main() {
             v
         } else if nth_derivative == 0 {
             convolve(&v, &impulse, 1.0)
+        } else if multiple_zero_cross {
+            v
         } else {
             let mut q = convolve(&v, &impulse, 1.0);
             for _i in 0..nth_derivative {
