@@ -125,7 +125,7 @@ fn main() {
     let raw_signal = matches.is_present("raw-signal");
     let zero_cross = matches.is_present("zero-cross");
 
-    let impulse_len = 8 * sigma;
+    let impulse_len = 6 * sigma;
     let mu = impulse_len / 2;
     let raw_impulse = (0..impulse_len)
         .map(|x| normal_pmf(mu as f64, sigma as f64, x as f64))
