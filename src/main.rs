@@ -72,6 +72,38 @@ fn zero_crossings(v: &[f64]) -> Vec<(usize, f64)> {
         .collect::<Vec<(usize, f64)>>()
 }
 
+fn multiple_zero_crossing(v: &Vec<f64>, s: &str, n: usize)  {
+    let sigma_string: Vec<&str> = s.split(',').collect();
+    let sigma_range_start= sigma_string[0].parse::<i32>().unwrap();
+    let sigma_range_end= sigma_string[2].parse::<i32>().unwrap();
+    let sigma_range_step= sigma_string[1].parse::<usize>().unwrap();
+    for temp_sigma in (sigma_range_start..sigma_range_end).step_by(sigma_range_step) {
+
+        let impulse_len = 6 * temp_sigma;
+        let mu = impulse_len / 2;
+        let raw_impulse = (0..impulse_len)
+            .map(|x| normal_pmf(mu as f64, temp_sigma as f64, x as f64))
+            .collect::<Vec<f64>>();
+        let impulse_weight: f64 = raw_impulse.iter().sum();
+        let impulse = raw_impulse
+            .iter()
+            .map(|x| x / impulse_weight)
+            .collect::<Vec<f64>>();
+        let res = {
+            let mut q = convolve(&v, &impulse, 1.0);
+            for _i in 0..n  {
+                q = convolve(&differentiate(&q), &impulse, 1.0);
+            }
+            q
+        };
+        let adj = ((impulse_len / 2) * (n as i32 + 1)) as i64;
+        zero_crossings(&res).iter().for_each(|(i, m)| {
+            println!("{}\t{}\t{}", (*i as i64 - adj), m, &temp_sigma);
+            });
+        }
+    }
+
+
 fn main() {
     let matches = App::new("ssfog")
         .version("0.1.0")
@@ -110,6 +142,19 @@ fn main() {
                 .long("zero-cross")
                 .help("Combined to -d 2 retrive the zero-crossing position for specific sigma"),
         )
+        .arg(
+            Arg::with_name("sigma-range")
+                .short("sr")
+                .long("sigma-range")
+                .takes_value(true)
+                .help("range for reiterate the software with different sigma. Format : 10,5,100. From 10 to 100 by 5 step."),
+        )
+        .arg(
+            Arg::with_name("multiple-zero-cross")
+                .short("mz")
+                .long("multiple-zero-cross")
+                .help("Create multiple zero_crossing vector for a range of Sigma"),
+        )
         .get_matches();
 
     let sigma = matches
@@ -124,6 +169,10 @@ fn main() {
         .unwrap();
     let raw_signal = matches.is_present("raw-signal");
     let zero_cross = matches.is_present("zero-cross");
+    let sigma_range = matches
+        .value_of("sigma-range")
+        .unwrap();
+    let multiple_zero_cross = matches.is_present("multiple-zero-cross");
 
     let impulse_len = 6 * sigma;
     let mu = impulse_len / 2;
@@ -151,6 +200,11 @@ fn main() {
             }
             q
         };
+
+        if multiple_zero_cross {
+            multiple_zero_crossing(&res, &sigma_range, nth_derivative)
+        }
+
         let adj = if raw_signal {
             0
         } else {
@@ -160,7 +214,7 @@ fn main() {
             zero_crossings(&res).iter().for_each(|(i, m)| {
                 println!("{}\t{}\t{}", (*i as i64 - adj), m, &sigma);
             });
-        } else {
+        }  else {
             //let res = &_res[impulse_len-1.._res.len()-impulse_len];
             res.iter()
                 .enumerate()
