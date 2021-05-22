@@ -72,12 +72,13 @@ fn zero_crossings(v: &[f64]) -> Vec<(usize, f64)> {
         .collect::<Vec<(usize, f64)>>()
 }
 
-fn multiple_zero_crossing(v: &Vec<f64>, s: &str, n: usize)  {
+fn multiple_zero_crossing(v: &Vec<f64>, s: &str, n: usize) -> Vec<(i32, Vec<(i64, f64)>)> {
     let sigma_string: Vec<&str> = s.split(',').collect();
     let sigma_range_start= sigma_string[0].parse::<i32>().unwrap();
     let sigma_range_end= sigma_string[2].parse::<i32>().unwrap();
     let sigma_range_step= sigma_string[1].parse::<usize>().unwrap();
-    for temp_sigma in (sigma_range_start..sigma_range_end).step_by(sigma_range_step) {
+
+    (sigma_range_start..sigma_range_end).step_by(sigma_range_step).rev().map(|temp_sigma| {
 
         let impulse_len = 6 * temp_sigma;
         let mu = impulse_len / 2;
@@ -97,11 +98,16 @@ fn multiple_zero_crossing(v: &Vec<f64>, s: &str, n: usize)  {
             q
         };
         let adj = ((impulse_len / 2) * (n as i32 + 1)) as i64;
-        zero_crossings(&res).iter().for_each(|(i, m)| {
-            println!("{}\t{}\t{}", (*i as i64 - adj), m, &temp_sigma);
-            });
-        }
-    }
+        (temp_sigma ,zero_crossings(&res).iter().map(|(i, m)| {
+            ((*i as i64 - adj), *m)
+            }).collect::<Vec<(i64,f64)>>()
+    )
+        // zero_crossings(&res).iter().map(|(i, m)| {
+        //     println!("{}\t{}\t{}", (*i as i64 - adj), m, &temp_sigma);
+        //     });
+        // }).collect::<Vec<(usize, Vec<(i64,f64)>)>>()
+    }).collect::<Vec<(i32, Vec<(i64,f64)>)>>()
+}
 
 
 fn main() {
@@ -204,7 +210,25 @@ fn main() {
         };
 
         if multiple_zero_cross {
-            multiple_zero_crossing(&res, &sigma_range, nth_derivative)
+            let vec = Vec::from(multiple_zero_crossing(&res, &sigma_range, nth_derivative));
+            for each_sigma in vec {
+                    println!("{:?}", each_sigma)
+                }
+
+            // let vec = multiple_zero_crossing(&res, &sigma_range, nth_derivative).iter().map( | x | {
+            //     let mut sigma = x.0;
+            //     x.1.iter().fold(vec![],|acc, tuple| {
+            //         if acc.is_empty() {
+            //         } else {
+            //             if abs((tuple.1 - acc.1)/acc.1)*100 <= 0.1 {
+            //                 (&sigma, &tuple).collect::<Vec<(i32,(i64,f64))>>()
+            //             }
+            //
+            //         }
+            //     })
+            //     }
+            //     );
+
         }
 
         let adj = if raw_signal {
